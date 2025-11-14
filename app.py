@@ -141,7 +141,7 @@ def upload_xml():
             'motorista': "Não informado (via API)",
             'createdAt': firestore.SERVER_TIMESTAMP,
             'products': products, 
-            'status': 'pendente_via_api',
+            'status': 'pendente',
         })
         
         # Salva cada alerta na coleção alertasCadastro
