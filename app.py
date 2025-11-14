@@ -30,7 +30,7 @@ def initialize_firebase():
         
         # Inicializa o Firebase
         cred = firebase_admin.credentials.Certificate(cred_data)
-        firebase_admin.initializeApp(cred)
+        firebase_admin.initialize_app(cred)
         
         print("INFO: Firebase Admin SDK inicializado com sucesso.")
         return firestore.client()
@@ -152,7 +152,7 @@ def upload_xml():
                 'numeroNota': p['numeroNota'],
                 'fileName': p['fileName'],
                 'dataAlerta': firestore.SERVER_TIMESTAMP,
-                'mensagem': 'Produto da nota fiscal não encontrado no cadastro de produtos principal (ou EAN inválido/desconhecido).'
+                'mensagem': 'Produto dFa nota fiscal não encontrado no cadastro de produtos principal (ou EAN inválido/desconhecido).'
             })
 
         # --- 4. Resposta de Sucesso ---
