@@ -1,0 +1,5 @@
+# requirements.txt
+Flask
+gunicorn
+firebase-admin
+lxml # Para parsing robusto de XML (melhor que xml.etree)
