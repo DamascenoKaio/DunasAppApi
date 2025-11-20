@@ -1,5 +1,3 @@
-# app.py - API Python no Render (Completo)
-
 from flask import Flask, request, jsonify
 import firebase_admin
 from firebase_admin import firestore
@@ -54,6 +52,20 @@ def get_xml_text_ns(element, xpath, default=''):
     found = element.find(xpath, NAMESPACE)
     return found.text.strip() if found is not None and found.text else default
 
+# Função para verificar se a nota já existe
+def nota_fiscal_existe(numero_nota):
+    """Verifica se uma nota fiscal com o mesmo número já existe no banco de dados."""
+    try:
+        notasFiscais_ref = db.collection('notasFiscais')
+        q = notasFiscais_ref.where('numeroNota', '==', numero_nota).limit(1)
+        
+        # Se encontrar algum documento, retorna True
+        return len(list(q.stream())) > 0
+    except Exception as e:
+        print(f"ERRO ao verificar duplicidade da nota: {e}")
+        # Em caso de erro na consulta, lançamos exceção para que seja tratada no endpoint
+        raise
+
 # --- ENDPOINT DA API ---
 
 @app.route('/api/uploadXML', methods=['POST'])
@@ -87,6 +99,16 @@ def upload_xml():
         notaId = get_xml_text_ns(infNFe, './nfe:ide/nfe:nNF')
         if not notaId:
             raise ValueError("Tag <nNF> (Número da Nota Fiscal) não encontrada.")
+        
+        # --- VALIDAÇÃO: Verifica se a nota já existe ---
+        if nota_fiscal_existe(notaId):
+            duration_ms = (os.times()[4] - start_time) * 1000
+            return jsonify({
+                "sucesso": False,
+                "mensagem": f"Nota Fiscal {notaId} já existe no banco de dados. Upload rejeitado.",
+                "numeroNota": notaId,
+                "tempo_processamento_ms": f"{duration_ms:.2f}"
+            }), 409  # HTTP 409 Conflict - Recurso já existe
             
         supplierName = get_xml_text_ns(infNFe, './nfe:emit/nfe:xNome') or 'Fornecedor não identificado'
         
@@ -152,7 +174,7 @@ def upload_xml():
                 'numeroNota': p['numeroNota'],
                 'fileName': p['fileName'],
                 'dataAlerta': firestore.SERVER_TIMESTAMP,
-                'mensagem': 'Produto dFa nota fiscal não encontrado no cadastro de produtos principal (ou EAN inválido/desconhecido).'
+                'mensagem': 'Produto da nota fiscal não encontrado no cadastro de produtos principal (ou EAN inválido/desconhecido).'
             })
 
         # --- 4. Resposta de Sucesso ---
